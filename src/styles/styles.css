@@ -150,4 +150,8 @@ button {
   height: 70px;
 }
 
+.sidebar-text {
+  text-align: center;
+  margin: 0;
+}
 

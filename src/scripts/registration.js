@@ -1,5 +1,3 @@
-import UI from './utils/utils.js'
-
 function createRegistrationLayout() {
   const container = UI.createElement("div", { class: "container-root" }, [
     UI.createElement('header', { class: "header" },  [

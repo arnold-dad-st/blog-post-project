@@ -1,6 +1,3 @@
-import UI from "./utils/utils.js";
-import { Storage } from "./utils/storage.js";
-
 function createForm() {
   const container = UI.createElement("div", { class: "container-root" }, [
     UI.createElement("header", { class: "header" }, [
@@ -41,7 +38,27 @@ function createForm() {
   createPostForm.addEventListener("click", createPostHandler);
 }
 
-createForm();
+function initApplicants() {
+  createForm();
+
+  const queryString = window.location.search;
+  const searchParams = new URLSearchParams(queryString);
+
+  if (searchParams.has("id")) {
+    const posts = JSON.parse(localStorage.getItem("posts"));
+    const postId = searchParams.get("id");
+
+    const post = posts.find((post) => post.id === +postId);
+
+    document.getElementById("postTitle").value = post.title;
+    document.getElementById("postStory").value = post.story;
+    document.getElementById("postImage").value = post.imageUrl ? post.imageUrl : "";
+  }
+
+}
+
+initApplicants();
+
 
 function createPostHandler(event) {
   event.preventDefault();
@@ -65,8 +82,8 @@ function createPostHandler(event) {
     createdAt: new Date().toISOString(),
   };
 
-  // Check if posts already exist in Storage
-  let posts = Storage.getItem("posts");
+  // Check if posts already exist in localStorage
+  let posts = JSON.parse(localStorage.getItem("posts"));
 
   // If no posts exist, create an empty array
   if (!posts) {
@@ -76,8 +93,8 @@ function createPostHandler(event) {
   // Add the new post to the posts array
   posts.push(newPost);
 
-  // Save the updated posts array to Storage
-  Storage.set("posts", posts);
+  // Save the updated posts array to localStorage
+  localStorage.setItem("posts", JSON.stringify(posts));
 
   window.location.assign("home.html");
 }
