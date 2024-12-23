@@ -1,29 +1,4 @@
-const posts = [
-  {
-    id: 1,
-    title: "The Adventures of Alice in Wonderland",
-    story:
-      "Alice was beginning to get very tired of sitting by her sister on the bank and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations.",
-    authorName: "Lewis Carroll",
-    img: "https://ik.imagekit.io/panmac/tr:f-auto,w-740,pr-true//bcd02f72-b50c-0179-8b4b-5e44f5340bd4/84f9dc39-0868-4cec-aeaa-2356387f37ce/Alice%E2%80%99s%20Adventures%20in%20Wonderland%20-%20Header.png",
-  },
-  {
-    id: 2,
-    title: "The Lord of the Rings: The Fellowship of the Ring",
-    story:
-      "One ring to rule them all, one ring to find them, one ring to bring them all and in the darkness bind them, in the Land of Mordor where the Shadows lie.",
-    authorName: "J.R.R. Tolkien",
-    img: "https://img.hulu.com/user/v3/artwork/3c4e0a9f-c6f2-44f4-a703-a18c6be2a937?base_image_bucket_name=image_manager&base_image=243fcf14-8e45-4441-96a8-be510660958a&size=600x338&format=webp",
-  },
-  {
-    id: 3,
-    title: "Pride and Prejudice",
-    story:
-      "It is a truth universally acknowledged, that a single man in possession of a good fortune must be in want of a wife.",
-    authorName: "Jane Austen",
-    img: "https://wellsvillesun.com/wp-content/uploads/2024/01/pride-and-prejudice-book-summary.jpg.webp",
-  },
-];
+import { api } from './apis/api.js';
 
 const bloggers = [
   {
@@ -69,6 +44,15 @@ const createNewPost = () => {
 };
 
 const createHomeLayout = function () {
+  const createNewPostButton =  UI.createElement(
+    "button",
+    { class: "panel-create-post" },
+    "Create New Post"
+  )
+
+  createNewPostButton.addEventListener("click", createNewPost);
+
+
   const container = UI.createElement("div", { class: "container-root" }, [
     UI.createElement(
       "header",
@@ -86,11 +70,7 @@ const createHomeLayout = function () {
         UI.createElement(
           "section",
           { class: "panel" },
-          UI.createElement(
-            "button",
-            { class: "panel-create-post", onclick: "createNewPost()" },
-            "Create New Post"
-          )
+          createNewPostButton
         ),
         createSection(),
         createFooter(),
@@ -107,12 +87,13 @@ function createFooter() {
 
 
 const handleDelete = (id) => {
-  state.posts = state.posts.filter((post) => post.id !== id);
-  localStorage.setItem("posts", JSON.stringify(state.posts));
+  api.post.delete(id).then(() => {
+    state.posts = state.posts.filter((post) => post.id !== id);
 
-  document.querySelector(".container-root").remove();
+    document.querySelector(".container-root").remove();
 
-  createHomeLayout();
+    createHomeLayout();
+  })
 };
 
 const handleEdit = (id) => {
@@ -125,6 +106,29 @@ const handleEdit = (id) => {
 
 function createSection() {
   const elements = state.posts.map((post) => {
+
+    const deleteButton = UI.createElement(
+      "button",
+      { class: "card-button m-r-1" },
+      "Delete"
+    )
+
+    deleteButton.addEventListener("click", () => {
+      handleDelete(post.id)
+    });
+
+    const editButton = UI.createElement(
+      "button",
+      { class: "card-button" },
+      "Edit"
+    )
+
+    editButton.addEventListener("click", () => {
+      handleEdit(post.id)
+    });
+
+
+
     return UI.createElement(
       "div",
       {
@@ -134,16 +138,8 @@ function createSection() {
         UI.createElement("div", { class: "card-body" }, [
           UI.createElement("p", { class: "card-text" }, post.title),
           UI.createElement("p", { class: "card-text" }, post.story),
-          UI.createElement(
-            "button",
-            { class: "card-button m-r-1", onClick: `handleDelete(${post.id})` },
-            "Delete"
-          ),
-          UI.createElement(
-            "button",
-            { class: "card-button", onClick: `handleEdit(${post.id})` },
-            "Edit"
-          ),
+          deleteButton,
+          editButton,
         ]),
       ]
     );
@@ -176,20 +172,12 @@ function createSidebar() {
 
 const initApplicants = () => {
   try {
-    const savedItemsJSON = localStorage.getItem("posts");
-
-    const savedItems = JSON.parse(savedItemsJSON);
-
-    if (savedItems) {
-      state.posts = savedItems;
-    } else {
-      state.posts = posts;
-      localStorage.setItem("posts", JSON.stringify(posts));
-    }
+    api.post.getPosts().then(data => {
+      state.posts = data;
+      createHomeLayout();
+    })
   } catch (error) {
-    state.posts = posts;
-  } finally {
-    createHomeLayout();
+    state.posts = [];
   }
 };
 

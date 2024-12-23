@@ -1,3 +1,5 @@
+import { api } from './apis/api.js'
+
 function createForm() {
   const container = UI.createElement("div", { class: "container-root" }, [
     UI.createElement("header", { class: "header" }, [
@@ -45,14 +47,15 @@ function initApplicants() {
   const searchParams = new URLSearchParams(queryString);
 
   if (searchParams.has("id")) {
-    const posts = JSON.parse(localStorage.getItem("posts"));
     const postId = searchParams.get("id");
 
-    const post = posts.find((post) => post.id === +postId);
-
-    document.getElementById("postTitle").value = post.title;
-    document.getElementById("postStory").value = post.story;
-    document.getElementById("postImage").value = post.imageUrl ? post.imageUrl : "";
+    api.post.getPostById(postId).then(post => {
+      document.getElementById("postTitle").value = post.title;
+      document.getElementById("postStory").value = post.story;
+      document.getElementById("postImage").value = post.img ? post.img : "";   
+    }).catch(() => {
+      window.location.assign("home.html");
+    })
   }
 
 }
@@ -66,10 +69,10 @@ function createPostHandler(event) {
   // Get form values
   const title = document.getElementById("postTitle").value.trim();
   const story = document.getElementById("postStory").value.trim();
-  const imageUrl = document.getElementById("postImage").value.trim();
+  const img = document.getElementById("postImage").value.trim();
 
   // Validate the form inputs
-  if (!title || !story || !imageUrl) {
+  if (!title || !story || !img) {
     alert("Please fill in all fields.");
     return;
   }
@@ -78,23 +81,24 @@ function createPostHandler(event) {
   const newPost = {
     title,
     story,
-    imageUrl,
-    createdAt: new Date().toISOString(),
+    authorName: '', 
+    img
   };
 
-  // Check if posts already exist in localStorage
-  let posts = JSON.parse(localStorage.getItem("posts"));
+  const queryString = window.location.search;
+  const searchParams = new URLSearchParams(queryString);
+  const id = searchParams.get("id");
 
-  // If no posts exist, create an empty array
-  if (!posts) {
-    posts = [];
+
+  if (id) {
+    api.post.update(id, newPost).then((post) => {
+      console.log(post);
+      window.location.assign("home.html");  
+    })
+  } else {
+    api.post.create(newPost).then((post) => {
+      console.log(post);
+      window.location.assign("home.html");  
+    })
   }
-
-  // Add the new post to the posts array
-  posts.push(newPost);
-
-  // Save the updated posts array to localStorage
-  localStorage.setItem("posts", JSON.stringify(posts));
-
-  window.location.assign("home.html");
 }
