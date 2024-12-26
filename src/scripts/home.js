@@ -1,4 +1,5 @@
 import { api } from './apis/api.js';
+import { isUserLogin } from './utils/is-user-login.js'
 
 const bloggers = [
   {
@@ -136,10 +137,17 @@ function createSection() {
       },
       [
         UI.createElement("div", { class: "card-body" }, [
-          UI.createElement("p", { class: "card-text" }, post.title),
-          UI.createElement("p", { class: "card-text" }, post.story),
-          deleteButton,
-          editButton,
+          UI.createElement("p", { class: "card-header" }, post.title),
+          UI.createElement('div', { class: "card-content" }, [
+            UI.createElement("img", {
+              src: post.img,
+              class: "card-img-top",
+              alt: "Post Image",
+            }),
+            UI.createElement("p", { class: "card-text" }, post.story)
+          ]),
+         deleteButton,
+         editButton
         ]),
       ]
     );
@@ -151,27 +159,34 @@ function createSection() {
 }
 
 function createSidebar() {
-  const elements = bloggers.map((blogger) => {
-    return UI.createElement(
-      "div",
-      { class: "card m-b-1" },
-      [
-        UI.createElement("img", { src: getRandomAvatar(), alt: "Avatar" }),
-        UI.createElement(
-          "p",
-          { class: "sidebar-text" },
-          `${blogger.firstName} ${blogger.lastName}`
-        ),
-      ]
-    );
+  api.user.getUser().then((bloggers) => {
+    bloggers.forEach((blogger) => {
+      const element = UI.createElement(
+        "div",
+        { class: "card m-b-1" },
+        [
+          UI.createElement("img", { src: getRandomAvatar(), alt: "Avatar" }),
+          UI.createElement(
+            "p",
+            { class: "sidebar-text" },
+            `${blogger.firstName} ${blogger.lastName}`
+          ),
+        ]
+      );
+      document.querySelector("#bloggers").appendChild(element);
+    });
   });
 
-  return UI.createElement("sidebar", { class: "sidebar" }, elements);
-
+  return UI.createElement("sidebar", { id: "bloggers", class: "sidebar" }, []);
 }
 
 const initApplicants = () => {
   try {
+    if (!isUserLogin()) {
+      window.location.assign('index.html');
+      return
+    }
+
     api.post.getPosts().then(data => {
       state.posts = data;
       createHomeLayout();

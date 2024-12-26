@@ -1,3 +1,38 @@
+
+import { api } from './apis/api.js'
+import { Storage } from './utils/storage.js'
+
+const handleLogin = async (event) => {
+  event.preventDefault();
+
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+  
+  const credentials = {
+    email, 
+    password
+  }
+
+  // {
+  //   "email": "miller@gmail.com",
+  //   "password": "asdasd"
+  // }
+
+  const result = await api.auth.login(credentials);
+
+  if (result.accessToken && result.user) {
+    Storage.set('token', result.accessToken);
+    Storage.set('user', result.user);
+    window.location.assign("home.html");  
+  } else {
+    alert('Something Wrong')
+  }
+  
+  
+
+  console.log(credentials);
+}
+
 function createLoginLayout() {
   const container = document.createElement("div");
   container.setAttribute("class", "container-root");
@@ -17,11 +52,13 @@ function createLoginLayout() {
 
   const form = document.createElement("form");
 
-  const inputUsername = document.createElement("input");
-  inputUsername.setAttribute("type", "text");
-  inputUsername.setAttribute("placeholder", "Username");
+  const inputEmail = document.createElement("input");
+  inputEmail.setAttribute('id', "email")
+  inputEmail.setAttribute("type", "text");
+  inputEmail.setAttribute("placeholder", "Email");
 
   const inputPassword = document.createElement("input");
+  inputPassword.setAttribute('id', "password")
   inputPassword.setAttribute('type', 'password');
   inputPassword.setAttribute('placeholder', 'Password');
 
@@ -29,10 +66,12 @@ function createLoginLayout() {
   buttonLogin.setAttribute("type", "submit" );
   buttonLogin.innerText = "Login";
 
+  buttonLogin.addEventListener("click", handleLogin)
+
   header.appendChild(link);
 
   // Append elements to the DOM
-  form.appendChild(inputUsername);
+  form.appendChild(inputEmail);
   form.appendChild(inputPassword);
   form.appendChild(buttonLogin);
 

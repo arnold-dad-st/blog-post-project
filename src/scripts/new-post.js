@@ -1,4 +1,5 @@
 import { api } from './apis/api.js'
+import { Storage } from "./utils/storage.js";
 
 function createForm() {
   const container = UI.createElement("div", { class: "container-root" }, [
@@ -21,10 +22,8 @@ function createForm() {
           cols: "50",
         }),
         UI.createElement("input", {
-          type: "url",
-          id: "postImage",
-          name: "postImage",
-          placeholder: "Enter image URL",
+          id: "file-upload",
+          type: "file",
         }),
         UI.createElement("div", { class: "" }, [
           UI.createElement("button", { id: "create-new-post" }, "Create Post"),
@@ -63,26 +62,32 @@ function initApplicants() {
 initApplicants();
 
 
-function createPostHandler(event) {
+async function createPostHandler(event) {
   event.preventDefault();
 
   // Get form values
   const title = document.getElementById("postTitle").value.trim();
   const story = document.getElementById("postStory").value.trim();
-  const img = document.getElementById("postImage").value.trim();
+  const fileUpload = document.getElementById("file-upload");
 
+  const uploadedFile = await api.fileUpload.upload(fileUpload.files[0]);
+
+  
   // Validate the form inputs
-  if (!title || !story || !img) {
+  if (!title || !story || !fileUpload.files.length) {
     alert("Please fill in all fields.");
     return;
   }
+
+  const user = Storage.getItem('user');
 
   // Create a new post object
   const newPost = {
     title,
     story,
-    authorName: '', 
-    img
+    authorName: user.username, 
+    img: uploadedFile.url,
+    userId: user.id
   };
 
   const queryString = window.location.search;
